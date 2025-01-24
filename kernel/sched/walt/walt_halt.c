@@ -9,6 +9,15 @@
 #include <walt.h>
 #include "trace.h"
 
+#ifdef CONFIG_OPLUS_ADD_CORE_CTRL_MASK
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_FRAME_BOOST)
+#include <../kernel/oplus_cpu/sched/frame_boost/frame_group.h>
+#endif
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+#include <../kernel/oplus_cpu/sched/sched_assist/sa_fair.h>
+#endif
+#endif /* CONFIG_OPLUS_ADD_CORE_CTRL_MASK */
+
 #ifdef CONFIG_HOTPLUG_CPU
 
 enum pause_type {
@@ -116,10 +125,14 @@ static void migrate_tasks(struct rq *dead_rq, struct rq_flags *rf)
 		 * There's this thread running, bail when that's the only
 		 * remaining thread:
 		 */
-		if (rq->nr_running == 1)
+		/* When ext enabled, tasks may exist in gloal rq */
+		/*if (rq->nr_running == 1)
 			break;
+		*/
 
 		next = pick_migrate_task(rq);
+		if (next == rq->idle)
+			break;
 
 		/*
 		 * Argh ... no iterator for tasks, we need to remove the
@@ -701,6 +714,15 @@ void walt_halt_init(void)
 	}
 
 	sched_setscheduler_nocheck(walt_drain_thread, SCHED_FIFO, &param);
+
+#ifdef CONFIG_OPLUS_ADD_CORE_CTRL_MASK
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_FRAME_BOOST)
+	init_fbg_halt_mask(&__cpu_halt_mask);
+#endif
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+	init_ux_halt_mask(&__cpu_halt_mask);
+#endif
+#endif /* CONFIG_OPLUS_ADD_CORE_CTRL_MASK */
 
 	register_trace_android_rvh_get_nohz_timer_target(android_rvh_get_nohz_timer_target, NULL);
 	register_trace_android_rvh_set_cpus_allowed_by_task(
