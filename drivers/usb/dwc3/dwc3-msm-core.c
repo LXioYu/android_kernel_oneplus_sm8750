@@ -5113,7 +5113,27 @@ static int dwc3_msm_set_role(struct dwc3_msm *mdwc, enum usb_role role)
 static int dwc3_msm_usb_role_switch_set_role(struct usb_role_switch *sw, enum usb_role role)
 {
 	struct dwc3_msm *mdwc = usb_role_switch_get_drvdata(sw);
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	enum usb_role cur_role = dwc3_msm_get_role(mdwc);
+	ktime_t start;
+	ktime_t end;
+	unsigned int timeout = 100;
+	s64 ms;
 
+	if(((cur_role == USB_ROLE_NONE) && (role == USB_ROLE_HOST)) ||
+	   ((cur_role == USB_ROLE_NONE) && (role == USB_ROLE_DEVICE))) {
+		start = ktime_get();
+	}
+	if(((cur_role == USB_ROLE_DEVICE) && (role == USB_ROLE_HOST)) ||
+	  ((cur_role == USB_ROLE_HOST) && (role == USB_ROLE_DEVICE))) {
+		end = ktime_get();
+		ms = ktime_to_ms(ktime_sub(end, start));
+		if (ms <= (s64)timeout) {
+			printk(KERN_ERR"cur_role:%s new_role:%s, ignore the dr swap within %dms\n", dwc3_msm_usb_role_string(cur_role), dwc3_msm_usb_role_string(role), timeout);
+			return 0;
+		}
+	}
+#endif
 	return dwc3_msm_set_role(mdwc, role);
 }
 
