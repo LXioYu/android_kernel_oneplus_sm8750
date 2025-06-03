@@ -458,7 +458,12 @@ static int glink_early_ssr_notifier_event(struct notifier_block *this,
 
 	trace_rproc_qcom_event(dev_name(glink->dev->parent), GLINK_SUBDEV_NAME, "prepare");
 
+#if 0
+/* Merge CR3964917 for fix ALM[8638837] */
 	qcom_glink_early_ssr_notify(glink->edge);
+#else
+	qcom_glink_smem_early_ssr_notify(glink->edge);
+#endif
 	return NOTIFY_DONE;
 }
 

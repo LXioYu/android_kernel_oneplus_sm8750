@@ -420,6 +420,18 @@ int qcom_glink_smem_start(struct qcom_glink_smem *smem)
 }
 EXPORT_SYMBOL(qcom_glink_smem_start);
 
+#if 1
+/* Merge CR3964917 for fix ALM[8638837] */
+void qcom_glink_smem_early_ssr_notify(void *data)
+{
+	struct qcom_glink_smem *smem = data;
+
+	if (smem->glink)
+		qcom_glink_early_ssr_notify(smem->glink);
+}
+EXPORT_SYMBOL_GPL(qcom_glink_smem_early_ssr_notify);
+#endif
+
 void qcom_glink_smem_unregister(struct qcom_glink_smem *smem)
 {
 	struct qcom_glink *glink;
